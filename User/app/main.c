@@ -10,6 +10,14 @@
 
 #include "bsp_spi_flash.h"
 
+#define	PD_ZOOM_FOCUS_STOP		0
+#define	PD_ZOOM_TELE_CMD		1
+#define	PD_ZOOM_WIDE_CMD		2
+#define	PD_FOCUS_FAR_CMD		3
+#define	PD_FOCUS_NEAR_CMD		4
+
+
+
 void timer0_int(void);
 void timer0_initial(void);
 void timer3_init(void);
@@ -330,39 +338,14 @@ void key_init(void)
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
     
-	GPIOD_InitStructure.GPIO_Pin = GPIO_Pin_0|GPIO_Pin_10|GPIO_Pin_11|GPIO_Pin_1|GPIO_Pin_2|GPIO_Pin_12|GPIO_Pin_13;
-    GPIOD_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIOD_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOB, &GPIOD_InitStructure);	
-
-	GPIOD_InitStructure.GPIO_Pin = GPIO_Pin_0;
-    GPIOD_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIOD_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOB, &GPIOD_InitStructure);	
-
-	GPIOD_InitStructure.GPIO_Pin = GPIO_Pin_1;
-    GPIOD_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIOD_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOB, &GPIOD_InitStructure);	
-
-
-
-
-	GPIO_ResetBits(GPIOB,GPIO_Pin_12);	
-	GPIO_ResetBits(GPIOB,GPIO_Pin_13);	
-	GPIO_ResetBits(GPIOB,GPIO_Pin_0);	
-	GPIO_ResetBits(GPIOB,GPIO_Pin_1);	
-	GPIO_ResetBits(GPIOB,GPIO_Pin_2);	
-	GPIO_ResetBits(GPIOB,GPIO_Pin_10);	
-	GPIO_ResetBits(GPIOB,GPIO_Pin_11);		
 		
-	GPIOD_InitStructure.GPIO_Pin = GPIO_Pin_3|GPIO_Pin_4|GPIO_Pin_5|GPIO_Pin_14|GPIO_Pin_15;
+	GPIOD_InitStructure.GPIO_Pin = GPIO_Pin_15;
     GPIOD_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
     GPIOD_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOB, &GPIOD_InitStructure);	
 
 	
-	GPIOD_InitStructure.GPIO_Pin = GPIO_Pin_6;
+	GPIOD_InitStructure.GPIO_Pin = GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_8|GPIO_Pin_9;
     GPIO_Init(GPIOC, &GPIOD_InitStructure);	
 
 
@@ -656,6 +639,83 @@ u8 RS485_SendBytes(u16 bytes_size,u8 *send_buff)
 #endif
 
 
+//cmd,0,stop; 1,tele,2wide; 3,far,4,near
+void pelcod_zf_packet_send(u8 cmd,u8 zfspeed)
+{
+	u8 cnt;
+	
+	u8 cmd_buff_private[7];
+	cmd_buff_private[0] = 0xff;
+	cmd_buff_private[1] = 1;
+
+	
+	switch(cmd)
+	{
+	case 1:
+		cmd_buff_private[3] = 0x20;
+		cmd_buff_private[2] = 0;
+		break;
+	case 2:
+		cmd_buff_private[3] = 0x40;
+		cmd_buff_private[2] = 0;
+		break;
+	case 3:
+		cmd_buff_private[3] = 0x00;
+		cmd_buff_private[2] = 0x01;//
+		break;
+	case 4:
+		cmd_buff_private[3] = 0x80;
+		cmd_buff_private[2] = 0;
+		break;
+	case 0:
+		cmd_buff_private[3] = 0x00;
+		cmd_buff_private[2] = 0;
+		break;
+	}
+	
+	cmd_buff_private[4] = 0;
+	cmd_buff_private[5] = 0;
+	
+	cmd_buff_private[6] = cmd_buff_private[1] + cmd_buff_private[2] + cmd_buff_private[3] + cmd_buff_private[4] + cmd_buff_private[5];
+	RS485_SendBytes(7,cmd_buff_private);
+}
+
+
+void pelcod_call_pre_packet_send(u8 val)
+{
+	u8 cnt;
+	
+	u8 cmd_buff_private[7];
+	cmd_buff_private[0] = 0xff;
+	cmd_buff_private[1] = 1;
+	cmd_buff_private[2] = 0;
+	cmd_buff_private[3] = 0x07;
+	cmd_buff_private[4] = 0;
+	cmd_buff_private[5] = val;
+	
+	cmd_buff_private[6] = cmd_buff_private[1] + cmd_buff_private[2] + cmd_buff_private[3] + cmd_buff_private[4] + cmd_buff_private[5];
+	RS485_SendBytes(7,cmd_buff_private);
+
+}
+
+
+void pelcod_set_pre_packet_send(u8 val)
+{
+	u8 cnt;
+	
+	u8 cmd_buff_private[7];
+	cmd_buff_private[0] = 0xff;
+	cmd_buff_private[1] = 1;
+	cmd_buff_private[2] = 0;
+	cmd_buff_private[3] = 0x03;
+	cmd_buff_private[4] = 0;
+	cmd_buff_private[5] = val;
+	
+	cmd_buff_private[6] = cmd_buff_private[1] + cmd_buff_private[2] + cmd_buff_private[3] + cmd_buff_private[4] + cmd_buff_private[5];
+	RS485_SendBytes(7,cmd_buff_private);
+}
+
+
 void SerialPutString(unsigned char *Sent_value,int lenghtbuf)
 {
     int k ;
@@ -760,6 +820,7 @@ u16 key_val_table[] = {KEY_LEFT_PIN,KEY_RIGHT_PIN,KEY_UP_PIN,KEY_DOWN_PIN,KEY_SE
 
 
 u16 key_pre = 0;
+u16 key_pre2 = 0;
 
 
 
@@ -771,13 +832,12 @@ u16 key_pre = 0;
 enum key_type
 {
 	KEY_NONE,
-	SLSUB,	
-	SLPLUS, 
+	KEY_FOCUS_SUB,	
+	KEY_FOCUS_PLUS, 
 	
-	SRPLUS,	
-	SRSUB,	
-	BPPLUS,	
-	BPSUB,	
+	KEY_ZOOM_SUB,	
+	KEY_ZOOM_PLUS,	
+	KEY_MODE,	
 };
 
 #define	key_to_long(val)	(val|0x9000)
@@ -786,26 +846,19 @@ enum key_type
 
 u32 key_merge(void)
 {
-	u32 data = 0,data2 = 0,data3 = 0;
+	u32 data = 0;
 
 	u32 key_tmp;
 	
-	//PA,PB,PC
-	//data = GPIO_ReadInputData(KEY_PORT1);
-	data2 = GPIO_ReadInputData(KEY_PORT2);	
-	data3 = GPIO_ReadInputData(KEY_PORT3);	
+	data = GPIO_ReadInputData(KEY_PORT3);	
 		
-	key_tmp = (data2>>14)&0x0003;//0-1
-	key_tmp |= (data2>>2)&0x0004;//2//
-	key_tmp |= (data2>>2)&0x0008;// 3
-	key_tmp |= (data3>>2)&0x0010;// 4
-	key_tmp |= (data2<<2)&0x0020;// 5
+	key_tmp = (data>>6)&0x0003;//0-1
 
 
 	return key_tmp;
 }
 
-#define	KEY_NUMS_MAX	6
+#define	KEY_NUMS_MAX	4
 
 
 u32 press_continue_cnt = 0;
@@ -813,9 +866,12 @@ u8 continue_motor_flag = 0;
 u16 motor_steps_cnt = 0;
 u8 press_long_flag = 0;
 
+u8 press_long_flag2 = 0;
+u32 press_continue_cnt2 = 0;
+u8 continue_motor_flag2 = 0;
 
-//返回0为无按键，返回非0值，则为对应的按键号
-static u16 key_ctl_check(void)
+
+static u16 key_check_1(void)
 {
 	u16 i;
 	u32 key_tmp;
@@ -835,7 +891,7 @@ static u16 key_ctl_check(void)
 				if(key_pre == i+1)
 				{
 
-					if((i+1) == BPPLUS || (i+1) == BPSUB)
+					if(key_pre2 != KEY_NONE)
 					{
 						if(long_press_cnt>80)
 						{
@@ -849,22 +905,19 @@ static u16 key_ctl_check(void)
 							
 							return ((i+1)|0x9000);
 						}
-
-						long_press_cnt++;
-					}
-					else
-					{
-						if(press_continue_cnt < 0xffff)
-							press_continue_cnt++;
-
-						if(press_continue_cnt > 10)
+						else
 						{
-							continue_motor_flag = 1;
-							key_pre = i+1;
-							return key_pre;
+							long_press_cnt++;
 
 						}
 					}
+					else
+					{
+						key_pre = i+1;
+						return (key_pre);	
+
+					}
+
 				}
 				key_pre = i+1;
 				//return (i+1);
@@ -896,6 +949,84 @@ static u16 key_ctl_check(void)
 
 	}
 	return 0;
+}	
+
+
+static u16 key_check_2(void)
+{
+	u16 i=0;
+	u32 key_tmp;
+	static u32 long_press_cnt = 0;// 50ms
+	
+	key_tmp = GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_15);
+	
+
+	if(((key_tmp)&0x0001)==0)
+	{
+		delay_X1ms(30);
+
+		key_tmp = GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_15);
+
+		i=0;
+		if(((key_tmp)&0x0001)==0)
+		{
+			if(key_pre2 == KEY_MODE)
+			{
+				if(long_press_cnt>80)
+				{
+					if(press_long_flag2)
+						return 0;
+					
+					press_long_flag2 = 1;
+					long_press_cnt=0;
+					key_pre2 = 0;
+
+					
+					return (KEY_MODE|0x9000);
+				}
+				
+				long_press_cnt++;
+
+			}
+			key_pre2 = KEY_MODE;
+			return (KEY_MODE);
+		}
+	}
+
+
+	if(key_pre2==KEY_MODE)
+	{
+		i = key_pre2|0x8000;
+		key_pre2 = 0;
+
+		if(press_continue_cnt2>10)
+			i = 0;
+
+		if(press_long_flag2)
+		{
+			press_long_flag2 = 0;
+			i =0;
+		}
+		press_continue_cnt = 0;
+			
+		continue_motor_flag2 = 0;
+		
+		return i;
+
+	}
+	return 0;
+}
+
+
+
+//返回0为无按键，返回非0值，则为对应的按键号
+static u16 key_ctl_check(void)
+{
+	key_check_2();
+
+	
+	return (key_check_1());
+	
 }
 
 
@@ -994,22 +1125,22 @@ u8 en_p0_state = 0;
 void key_analyze(u16 val)
 {
 
-	if(val > 0 && val < 0x8000)
+	if(val > 0 && val < KEY_MODE)
 	{
 		switch(val)
 		{
-		case (SLPLUS):
-			left_motor_run(1);
+		case (KEY_FOCUS_PLUS):
+			pelcod_zf_packet_send(PD_FOCUS_FAR_CMD,0);
 			break;
-		case (SLSUB):
-			left_motor_run(2);
+		case (KEY_FOCUS_SUB):
+			pelcod_zf_packet_send(PD_FOCUS_NEAR_CMD,0);
 			break;
 
-		case (SRPLUS):
-			right_motor_run(1);
+		case (KEY_ZOOM_PLUS):
+			pelcod_zf_packet_send(PD_ZOOM_TELE_CMD,0);
 			break;
-		case (SRSUB):
-			right_motor_run(2);
+		case (KEY_ZOOM_SUB):
+			pelcod_zf_packet_send(PD_ZOOM_WIDE_CMD,0);
 			break;
 		default:
 			break;
@@ -1021,54 +1152,45 @@ void key_analyze(u16 val)
 
 	switch(val)
 	{
-	case key_to_release(SLPLUS):
-		left_motor_run(1);
-		break;
-	case key_to_release(SLSUB):
-		left_motor_run(2);
-		break;
+	case key_to_release(KEY_FOCUS_PLUS):
+	case key_to_release(KEY_FOCUS_SUB):
+	case key_to_release(KEY_ZOOM_PLUS):
+	case key_to_release(KEY_ZOOM_SUB):
+		pelcod_zf_packet_send(PD_ZOOM_FOCUS_STOP,0);
 
-	case key_to_release(SRPLUS):
-		right_motor_run(1);
-		break;
-	case key_to_release(SRSUB):
-		right_motor_run(2);
-		break;
-
-	case key_to_release(BPPLUS):
-
-		GPIO_WriteBit(GPIOB,GPIO_Pin_10, Bit_SET);
-		delay_X1ms(300);
-		GPIO_WriteBit(GPIOB,GPIO_Pin_10, Bit_RESET);
-		
-
-		break;
-	case key_to_release(BPSUB):
-		GPIO_WriteBit(GPIOB,GPIO_Pin_11, Bit_SET);
-		delay_X1ms(300);
-		GPIO_WriteBit(GPIOB,GPIO_Pin_11, Bit_RESET);
-
-			break;
-	case key_to_long(BPSUB):
-	case key_to_long(BPPLUS):
-		if(en_p0_state)
-		{
-			GPIO_WriteBit(GPIOB,GPIO_Pin_0, Bit_RESET);
-
-			en_p0_state = 0;
-		}
-		else
-		{
-			GPIO_WriteBit(GPIOB,GPIO_Pin_0, Bit_SET);
-			en_p0_state = 1;
-		}
-			break;
-	
+		break;	
 		
 	default:
 		break;
 	}
 
+
+	if(key_pre2 == key_to_release(KEY_MODE) || (key_pre2 == key_to_long(KEY_MODE)))
+	{
+		
+		switch(val)
+		{
+		case key_to_release(KEY_FOCUS_PLUS):
+		case key_to_release(KEY_FOCUS_SUB):
+		case key_to_release(KEY_ZOOM_PLUS):
+		case key_to_release(KEY_ZOOM_SUB):
+			pelcod_zf_packet_send(PD_ZOOM_FOCUS_STOP,0);
+		
+			break;
+		case key_to_long(KEY_FOCUS_PLUS):
+		case key_to_long(KEY_FOCUS_SUB):
+		case key_to_long(KEY_ZOOM_PLUS):
+		case key_to_long(KEY_ZOOM_SUB):
+			pelcod_zf_packet_send(PD_ZOOM_FOCUS_STOP,0);
+		
+			break;
+					
+		default:
+			break;
+		}
+
+		return;
+	}
 
 }
 
@@ -1099,51 +1221,13 @@ extern void delay1Ms(int ms);
 int main(void)
 {	
     u16 k;
-
-
-	ttlen = sizeof(system_para.system_para);
 	
 	InterruptConfig();
 	ports_initial();
-    delay_X1ms(600);
 
-
-#if 0
-	s16 mycnt = 0;
-
-	mycnt = 0;
-		while(1)
-		{
-
-			mycnt++;
-
-			if(mycnt >= 0 && mycnt < 300){
-			LenDrvZoomMove(1,30);
-			LensDrvFocusMove(1,30);
-			mycnt++;
-			}
-			else if(mycnt >= 300 && mycnt < 600 )
-			{
-				LenDrvZoomMove(0,30);
-			LensDrvFocusMove(0,30);
-			mycnt++;
-
-			}
-			else if(mycnt >= 600)
-				mycnt = 0;
-			
-			delay_X1ms(100);
-			
-			//delay_X1ms(2000);
-			//LenDrvZoomMove(0,200);
-			//LensDrvFocusMove(0,200);
-			//delay_X1ms(300);
-			//delay_X1ms(2000);
-		}
-	
-#endif
-
-
+	Baud_rate = DOME_BAUDRATE_2400;//2400
+	domeNo = 1;
+	uart0_init();
 
 
 	while(1)
