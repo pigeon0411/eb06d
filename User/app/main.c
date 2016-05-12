@@ -1174,14 +1174,14 @@ void key_analyze(u16 val)
 		case key_to_release(KEY_FOCUS_SUB):
 		case key_to_release(KEY_ZOOM_PLUS):
 		case key_to_release(KEY_ZOOM_SUB):
-			pelcod_zf_packet_send(PD_ZOOM_FOCUS_STOP,0);
+			pelcod_call_pre_packet_send(200 + (val&0x00ff));
 		
 			break;
 		case key_to_long(KEY_FOCUS_PLUS):
 		case key_to_long(KEY_FOCUS_SUB):
 		case key_to_long(KEY_ZOOM_PLUS):
 		case key_to_long(KEY_ZOOM_SUB):
-			pelcod_zf_packet_send(PD_ZOOM_FOCUS_STOP,0);
+			pelcod_call_pre_packet_send(204 + (val&0x00ff));
 		
 			break;
 					
