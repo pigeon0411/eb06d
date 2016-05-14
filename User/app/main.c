@@ -646,7 +646,7 @@ void pelcod_zf_packet_send(u8 cmd,u8 zfspeed)
 	
 	u8 cmd_buff_private[7];
 	cmd_buff_private[0] = 0xff;
-	cmd_buff_private[1] = 1;
+	cmd_buff_private[1] = domeNo;
 
 	
 	switch(cmd)
@@ -687,7 +687,7 @@ void pelcod_call_pre_packet_send(u8 val)
 	
 	u8 cmd_buff_private[7];
 	cmd_buff_private[0] = 0xff;
-	cmd_buff_private[1] = 1;
+	cmd_buff_private[1] = domeNo;
 	cmd_buff_private[2] = 0;
 	cmd_buff_private[3] = 0x07;
 	cmd_buff_private[4] = 0;
@@ -705,7 +705,7 @@ void pelcod_set_pre_packet_send(u8 val)
 	
 	u8 cmd_buff_private[7];
 	cmd_buff_private[0] = 0xff;
-	cmd_buff_private[1] = 1;
+	cmd_buff_private[1] = domeNo;
 	cmd_buff_private[2] = 0;
 	cmd_buff_private[3] = 0x03;
 	cmd_buff_private[4] = 0;
@@ -832,11 +832,14 @@ u16 key_pre2 = 0;
 enum key_type
 {
 	KEY_NONE,
-	KEY_FOCUS_SUB,	
-	KEY_FOCUS_PLUS, 
+		KEY_FOCUS_PLUS, 
+		
+		KEY_ZOOM_SUB,	
+
 	
-	KEY_ZOOM_SUB,	
 	KEY_ZOOM_PLUS,	
+		KEY_FOCUS_SUB,	
+	
 	KEY_MODE,	
 };
 
@@ -852,7 +855,7 @@ u32 key_merge(void)
 	
 	data = GPIO_ReadInputData(KEY_PORT3);	
 		
-	key_tmp = (data>>6)&0x0003;//0-1
+	key_tmp = (data>>6)&0x000f;//0-1
 
 
 	return key_tmp;
@@ -1124,48 +1127,20 @@ u8 en_p0_state = 0;
 
 void key_analyze(u16 val)
 {
+	static u16 val_pre = 0xffff;
 
-	if(val > 0 && val < KEY_MODE)
-	{
-		switch(val)
+	if(val_pre != 0xffff && val_pre == val)
 		{
-		case (KEY_FOCUS_PLUS):
-			pelcod_zf_packet_send(PD_FOCUS_FAR_CMD,0);
-			break;
-		case (KEY_FOCUS_SUB):
-			pelcod_zf_packet_send(PD_FOCUS_NEAR_CMD,0);
-			break;
-
-		case (KEY_ZOOM_PLUS):
-			pelcod_zf_packet_send(PD_ZOOM_TELE_CMD,0);
-			break;
-		case (KEY_ZOOM_SUB):
-			pelcod_zf_packet_send(PD_ZOOM_WIDE_CMD,0);
-			break;
-		default:
-			break;
-		}
-
-		return;
-
-	}
-
-	switch(val)
-	{
-	case key_to_release(KEY_FOCUS_PLUS):
-	case key_to_release(KEY_FOCUS_SUB):
-	case key_to_release(KEY_ZOOM_PLUS):
-	case key_to_release(KEY_ZOOM_SUB):
-		pelcod_zf_packet_send(PD_ZOOM_FOCUS_STOP,0);
-
-		break;	
 		
-	default:
-		break;
+		return;
 	}
 
+	val_pre = val;
+	
+	
 
-	if(key_pre2 == key_to_release(KEY_MODE) || (key_pre2 == key_to_long(KEY_MODE)))
+
+	if(key_pre2 == key_to_release(KEY_MODE) || (key_pre2 == key_to_long(KEY_MODE)) ||key_pre2 == (KEY_MODE))
 	{
 		
 		switch(val)
@@ -1191,7 +1166,50 @@ void key_analyze(u16 val)
 
 		return;
 	}
+	else
+	{
+		if(val > 0 && val < KEY_MODE)
+			{
+				switch(val)
+				{
+				case (KEY_FOCUS_PLUS):
+					pelcod_zf_packet_send(PD_FOCUS_FAR_CMD,0);
+					break;
+				case (KEY_FOCUS_SUB):
+					pelcod_zf_packet_send(PD_FOCUS_NEAR_CMD,0);
+					break;
+		
+				case (KEY_ZOOM_PLUS):
+					pelcod_zf_packet_send(PD_ZOOM_TELE_CMD,0);
+					break;
+				case (KEY_ZOOM_SUB):
+					pelcod_zf_packet_send(PD_ZOOM_WIDE_CMD,0);
+					break;
+				default:
+					break;
+				}
+		
+				return;
+		
+			}
+		
+			switch(val)
+			{
+			case key_to_release(KEY_FOCUS_PLUS):
+			case key_to_release(KEY_FOCUS_SUB):
+			case key_to_release(KEY_ZOOM_PLUS):
+			case key_to_release(KEY_ZOOM_SUB):
+				pelcod_zf_packet_send(PD_ZOOM_FOCUS_STOP,0);
+		
+				break;	
+				
+			default:
+				break;
+			}
 
+
+
+	}
 }
 
 u8 key_monitor(void)
@@ -1226,7 +1244,7 @@ int main(void)
 	ports_initial();
 
 	Baud_rate = DOME_BAUDRATE_2400;//2400
-	domeNo = 1;
+	domeNo = 0xff;
 	uart0_init();
 
 
