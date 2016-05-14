@@ -1127,15 +1127,15 @@ u8 en_p0_state = 0;
 
 void key_analyze(u16 val)
 {
-	static u16 val_pre = 0xffff;
-
-	if(val_pre != 0xffff && val_pre == val)
-		{
-		
-		return;
-	}
-
-	val_pre = val;
+//	static u16 val_pre = 0xffff;
+//
+//	if(val_pre != 0xffff && val_pre == val)
+//		{
+//		
+//		return;
+//	}
+//
+//	val_pre = val;
 	
 	
 
@@ -1146,17 +1146,46 @@ void key_analyze(u16 val)
 		switch(val)
 		{
 		case key_to_release(KEY_FOCUS_PLUS):
+			
+			pelcod_call_pre_packet_send(203);
+		
+			break;
 		case key_to_release(KEY_FOCUS_SUB):
+			
+			pelcod_call_pre_packet_send(204);
+		
+			break;
 		case key_to_release(KEY_ZOOM_PLUS):
+			pelcod_call_pre_packet_send(201);
+		
+			break;
+
+			
 		case key_to_release(KEY_ZOOM_SUB):
-			pelcod_call_pre_packet_send(200 + (val&0x00ff));
+			pelcod_call_pre_packet_send(202);
+		
+			break;
 		
 			break;
 		case key_to_long(KEY_FOCUS_PLUS):
+			
+			pelcod_call_pre_packet_send(207);
+		
+			break;
 		case key_to_long(KEY_FOCUS_SUB):
+			
+			pelcod_call_pre_packet_send(208);
+		
+			break;
 		case key_to_long(KEY_ZOOM_PLUS):
+			
+			pelcod_call_pre_packet_send(205);
+		
+			break;
 		case key_to_long(KEY_ZOOM_SUB):
-			pelcod_call_pre_packet_send(204 + (val&0x00ff));
+			pelcod_call_pre_packet_send(206);
+		
+			break;
 		
 			break;
 					
