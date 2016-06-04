@@ -177,7 +177,56 @@
           <Name>-O14 -S0 -C0 -N00("ARM Cortex-M3") -D00(1BA00477) -L00(4) -FO7  -FN1 -FC1000 -FD20000000 -FF0STM32F10x_512 -FL080000 -FS08000000 -FP0($$Device:STM32F103RC$Flash\STM32F10x_512.FLM)</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
-      <Breakpoint/>
+      <Breakpoint>
+        <Bp>
+          <Number>0</Number>
+          <Type>0</Type>
+          <LineNumber>1147</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134224738</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>F:\eb06\eb06d\code\Project\User\app\main.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\Template\../../User/app/main.c\1147</Expression>
+        </Bp>
+        <Bp>
+          <Number>1</Number>
+          <Type>0</Type>
+          <LineNumber>1180</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134224810</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>F:\eb06\eb06d\code\Project\User\app\main.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\Template\../../User/app/main.c\1180</Expression>
+        </Bp>
+        <Bp>
+          <Number>2</Number>
+          <Type>0</Type>
+          <LineNumber>1211</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134224870</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>F:\eb06\eb06d\code\Project\User\app\main.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\Template\../../User/app/main.c\1211</Expression>
+        </Bp>
+      </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
@@ -244,12 +293,8 @@
       <bLintAuto>0</bLintAuto>
       <SystemViewers>
         <Entry>
-          <Name>System Viewer\GPIOB</Name>
-          <WinId>35905</WinId>
-        </Entry>
-        <Entry>
           <Name>System Viewer\GPIOC</Name>
-          <WinId>35904</WinId>
+          <WinId>35905</WinId>
         </Entry>
       </SystemViewers>
     </TargetOption>

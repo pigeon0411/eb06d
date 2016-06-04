@@ -873,6 +873,7 @@ u8 press_long_flag2 = 0;
 u32 press_continue_cnt2 = 0;
 u8 continue_motor_flag2 = 0;
 
+u8 key_combine_state = 0;
 
 static u16 key_check_1(void)
 {
@@ -885,7 +886,7 @@ static u16 key_check_1(void)
 	{
 		if(((key_tmp>>i)&0x0001)==0)
 		{
-			delay_X1ms(40);
+			delay_X1ms(80);
 
 			key_tmp = key_merge();
 
@@ -896,7 +897,7 @@ static u16 key_check_1(void)
 
 					if(key_pre2 != KEY_NONE)
 					{
-						if(long_press_cnt>80)
+						if(long_press_cnt>50)
 						{
 							if(press_long_flag)
 								return 0;
@@ -966,7 +967,7 @@ static u16 key_check_2(void)
 
 	if(((key_tmp)&0x0001)==0)
 	{
-		delay_X1ms(30);
+		delay_X1ms(80);
 
 		key_tmp = GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_15);
 
@@ -975,7 +976,7 @@ static u16 key_check_2(void)
 		{
 			if(key_pre2 == KEY_MODE)
 			{
-				if(long_press_cnt>80)
+				if(long_press_cnt>40)
 				{
 					if(press_long_flag2)
 						return 0;
@@ -1032,6 +1033,168 @@ static u16 key_ctl_check(void)
 	
 }
 
+
+
+void key_analyze_mode(u16 mode_val,u16 val)
+{
+
+	if(mode_val == key_to_release(KEY_MODE) ||(mode_val == KEY_MODE)||(mode_val == key_to_long(KEY_MODE)))
+	{
+		
+		switch(val)
+		{
+		case key_to_release(KEY_FOCUS_PLUS):
+			
+			pelcod_call_pre_packet_send(203);
+		
+			break;
+		case key_to_release(KEY_FOCUS_SUB):
+			
+			pelcod_call_pre_packet_send(204);
+		
+			break;
+		case key_to_release(KEY_ZOOM_PLUS):
+			pelcod_call_pre_packet_send(201);
+		
+			break;
+
+			
+		case key_to_release(KEY_ZOOM_SUB):
+			pelcod_call_pre_packet_send(202);
+		
+			break;
+		case key_to_long(KEY_FOCUS_PLUS):
+			
+			pelcod_call_pre_packet_send(207);
+		
+			break;
+		case key_to_long(KEY_FOCUS_SUB):
+			
+			pelcod_call_pre_packet_send(208);
+		
+			break;
+		case key_to_long(KEY_ZOOM_PLUS):
+			
+			pelcod_call_pre_packet_send(205);
+		
+			break;
+		case key_to_long(KEY_ZOOM_SUB):
+			pelcod_call_pre_packet_send(206);
+		
+			break;
+							
+		default:
+			break;
+		}
+
+		return;
+	}
+	
+	
+}
+
+
+void key_analyze_non_mode(u16 mode_val,u16 val)
+{
+
+	
+	if(mode_val == 0)
+	{
+		if(val > 0 && val < KEY_MODE)
+			{
+				switch(val)
+				{
+				case (KEY_FOCUS_PLUS):
+					pelcod_zf_packet_send(PD_FOCUS_FAR_CMD,0);
+					break;
+				case (KEY_FOCUS_SUB):
+					pelcod_zf_packet_send(PD_FOCUS_NEAR_CMD,0);
+					break;
+		
+				case (KEY_ZOOM_PLUS):
+					pelcod_zf_packet_send(PD_ZOOM_TELE_CMD,0);
+					break;
+				case (KEY_ZOOM_SUB):
+					pelcod_zf_packet_send(PD_ZOOM_WIDE_CMD,0);
+					break;
+				default:
+					break;
+				}
+		
+				return;
+		
+			}
+		
+			switch(val)
+			{
+			case key_to_release(KEY_FOCUS_PLUS):
+			case key_to_release(KEY_FOCUS_SUB):
+			case key_to_release(KEY_ZOOM_PLUS):
+			case key_to_release(KEY_ZOOM_SUB):
+				pelcod_zf_packet_send(PD_ZOOM_FOCUS_STOP,0);
+		
+				break;	
+				
+			default:
+				break;
+			}
+
+	}
+}
+
+
+
+static u16 key_ctl_check_all(void)
+{
+	u16 key_mode_tmp;
+	u16 key_tmp ;
+	static u16 key_tmp_bak =0xff;
+
+
+	key_mode_tmp = key_check_2();
+	key_tmp = key_check_1();
+
+	if(key_mode_tmp || press_long_flag2)
+	{
+		if(key_tmp)
+		{
+			if(press_long_flag2)
+			{
+				key_mode_tmp = key_to_long(KEY_MODE);
+
+			}
+			key_analyze_mode(key_mode_tmp,key_tmp);
+			
+		}
+
+		key_combine_state = 1;
+	}
+	else
+	{
+
+		if(key_tmp)
+		{
+			if(key_combine_state)
+			{	
+				if(key_tmp_bak != key_tmp && key_tmp_bak!=0xff)
+				{
+					key_combine_state = 0;
+
+				}
+				
+			}
+			else
+			{
+				key_analyze_non_mode(key_mode_tmp,key_tmp);
+			}
+
+			key_tmp_bak = key_tmp;
+
+		}
+	}
+	return 0;
+	
+}
 
 
 
@@ -1125,6 +1288,15 @@ void left_motor_run(u8 dir)
 
 u8 en_p0_state = 0;
 
+
+
+void key_anal_mode(u16 val)
+{
+
+
+}
+
+
 void key_analyze(u16 val)
 {
 //	static u16 val_pre = 0xffff;
@@ -1138,10 +1310,10 @@ void key_analyze(u16 val)
 //	val_pre = val;
 	
 	
-
-
-//	if(key_pre2 == key_to_release(KEY_MODE) || (key_pre2 == key_to_long(KEY_MODE)) ||key_pre2 == (KEY_MODE))
-	if(key_pre2 == key_to_release(KEY_MODE) || (key_pre2 == key_to_long(KEY_MODE)) )
+//	if(key_pre2 == KEY_MODE)
+//		return;
+	
+	if(key_pre2 == key_to_release(KEY_MODE) ||(key_pre2 == KEY_MODE))
 	{
 		
 		switch(val)
@@ -1166,7 +1338,19 @@ void key_analyze(u16 val)
 			pelcod_call_pre_packet_send(202);
 		
 			break;
+					
+		default:
+			break;
+		}
+
+		return;
+	}
+	else if((key_pre2 == key_to_long(KEY_MODE)))
+//	if(key_pre2 == key_to_release(KEY_MODE) || (key_pre2 == key_to_long(KEY_MODE)) )
+	{
 		
+		switch(val)
+		{
 		case key_to_long(KEY_FOCUS_PLUS):
 			
 			pelcod_call_pre_packet_send(207);
@@ -1279,7 +1463,8 @@ int main(void)
 	while(1)
 	{
 			
-        key_monitor();
+        //key_monitor();
+		key_ctl_check_all();
 		delay_X1ms(10);
 		
 	}
