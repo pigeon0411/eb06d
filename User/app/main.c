@@ -1140,7 +1140,8 @@ void key_analyze(u16 val)
 	
 
 
-	if(key_pre2 == key_to_release(KEY_MODE) || (key_pre2 == key_to_long(KEY_MODE)) ||key_pre2 == (KEY_MODE))
+//	if(key_pre2 == key_to_release(KEY_MODE) || (key_pre2 == key_to_long(KEY_MODE)) ||key_pre2 == (KEY_MODE))
+	if(key_pre2 == key_to_release(KEY_MODE) || (key_pre2 == key_to_long(KEY_MODE)) )
 	{
 		
 		switch(val)
@@ -1166,7 +1167,6 @@ void key_analyze(u16 val)
 		
 			break;
 		
-			break;
 		case key_to_long(KEY_FOCUS_PLUS):
 			
 			pelcod_call_pre_packet_send(207);
@@ -1187,7 +1187,6 @@ void key_analyze(u16 val)
 		
 			break;
 		
-			break;
 					
 		default:
 			break;
